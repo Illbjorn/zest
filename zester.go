@@ -21,19 +21,35 @@ type Zester struct {
 func (self Zester) Assert(cond bool, msgAndValues ...any) {
 	self.T.Helper()
 	if !cond {
-		if msg, ok := msgAndValues[0].(string); ok {
-			self.T.Errorf(msg, msgAndValues[1:]...)
-			return
-		} else {
-			self.T.Error("assertion failed")
+		var msg string
+		var args []any
+		if len(msgAndValues) > 0 {
+			if v, ok := msgAndValues[0].(string); ok {
+				msg = v
+				args = msgAndValues[1:]
+			} else {
+				msg = "assertion failed"
+			}
 		}
+		self.Log.Error(msg, args...)
+		self.T.Fail()
 	}
 }
 
-func (self Zester) Must(cond bool, msg string, values ...any) {
+func (self Zester) Must(cond bool, msgAndValues ...any) {
 	self.T.Helper()
 	if !cond {
-		self.T.Errorf(msg, values...)
+		var msg string
+		var args []any
+		if len(msgAndValues) > 0 {
+			if v, ok := msgAndValues[0].(string); ok {
+				msg = v
+				args = msgAndValues[1:]
+			} else {
+				msg = "must condition failed"
+			}
+		}
+		self.Log.Error(msg, args...)
 		self.T.FailNow()
 	}
 }

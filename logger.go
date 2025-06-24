@@ -2,6 +2,7 @@ package zest
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 )
@@ -17,10 +18,11 @@ func (self *Logger) With(pairs ...any) *Logger {
 		return self
 	}
 
-	strpairs := make([]string, 0, len(pairs)/2)
-	for i := 0; i < len(pairs); i += 2 {
+	strpairs := make([]string, 0, (len(pairs)/2)+1)
+	strpairs[0] = self.pairs
+	for i := 1; i < len(pairs); i += 2 {
 		value := fmt.Sprintf("%v", pairs[i+1])
-		// Replace all control characters with literals
+		// Escape all control characters
 		value = strings.ReplaceAll(value, "\n", "\\n")
 		value = strings.ReplaceAll(value, "\t", "\\t")
 		value = strings.ReplaceAll(value, "\v", "\\v")
@@ -42,17 +44,32 @@ func (self *Logger) With(pairs ...any) *Logger {
 	}
 }
 
-func (self Logger) Info(msg string, values ...any) {
+const nl = "\n"
+
+func (self Logger) log(level string, msg string, values ...any) {
 	self.T.Helper()
-	self.T.Logf("INF "+msg, values...)
+	fmt.Fprint(os.Stderr, level, " ")
+	fmt.Fprintf(os.Stderr, msg, values...)
+	if self.pairs != "" {
+		fmt.Fprint(os.Stderr, " ", self.pairs)
+	}
+	fmt.Fprintln(os.Stderr)
+}
+
+func (self Logger) Info(msg string, values ...any) {
+	const inf = "INF"
+	self.T.Helper()
+	self.log(inf, msg, values...)
 }
 
 func (self Logger) Warn(msg string, values ...any) {
+	const wrn = "WRN"
 	self.T.Helper()
-	self.T.Logf("WRN "+msg, values...)
+	self.log(wrn, msg, values...)
 }
 
 func (self Logger) Error(msg string, values ...any) {
+	const err = "ERR"
 	self.T.Helper()
-	self.T.Logf("ERR "+msg, values...)
+	self.log(err, msg, values...)
 }
