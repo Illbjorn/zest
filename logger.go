@@ -11,10 +11,10 @@ type Logger struct {
 	pairs string
 }
 
-func (self *Logger) With(pairs ...any) {
+func (self *Logger) With(pairs ...any) *Logger {
 	self.T.Helper()
 	if len(pairs)%2 != 0 || len(pairs) == 0 {
-		return
+		return self
 	}
 
 	strpairs := make([]string, 0, len(pairs)/2)
@@ -28,8 +28,15 @@ func (self *Logger) With(pairs ...any) {
 		value = strings.ReplaceAll(value, "\r", "\\r")
 		strpairs = append(strpairs, fmt.Sprintf("[%s]=>[%s]", pairs[i], value))
 	}
+	newPairs := strings.Join(strpairs, " ")
 
-	*self = Logger{
+	if self.pairs != "" {
+		return &Logger{
+			T:     self.T,
+			pairs: self.pairs + " " + newPairs,
+		}
+	}
+	return &Logger{
 		T:     self.T,
 		pairs: strings.Join(strpairs, " "),
 	}
@@ -37,18 +44,15 @@ func (self *Logger) With(pairs ...any) {
 
 func (self Logger) Info(msg string, values ...any) {
 	self.T.Helper()
-	msg = fmt.Sprintf(msg, values...)
-	if self.pairs != "" {
-		msg += self.pairs
-	}
-	self.T.Log(msg)
+	self.T.Logf("INF "+msg, values...)
+}
+
+func (self Logger) Warn(msg string, values ...any) {
+	self.T.Helper()
+	self.T.Logf("WRN "+msg, values...)
 }
 
 func (self Logger) Error(msg string, values ...any) {
 	self.T.Helper()
-	msg = fmt.Sprintf(msg, values...)
-	if self.pairs != "" {
-		msg += self.pairs
-	}
-	self.T.Error(msg)
+	self.T.Logf("ERR "+msg, values...)
 }
