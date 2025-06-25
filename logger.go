@@ -20,7 +20,7 @@ func (self *Logger) With(pairs ...any) *Logger {
 
 	strpairs := make([]string, 1, (len(pairs)/2)+1)
 	strpairs[0] = self.pairs
-	for i := 1; i < len(pairs); i += 2 {
+	for i := 0; i < len(pairs); i += 2 {
 		value := fmt.Sprintf("%v", pairs[i+1])
 		// Escape all control characters
 		value = strings.ReplaceAll(value, "\n", "\\n")
